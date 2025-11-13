@@ -134,7 +134,6 @@ The template provides a structured approach to building the scraper:
 
 - **requests** - HTTP library for making web requests
 - **beautifulsoup4** - HTML parsing and navigation
-- **lxml** - Fast XML and HTML parser (BeautifulSoup backend)
 
 ## Tips for Success
 
