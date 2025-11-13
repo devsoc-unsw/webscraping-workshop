@@ -123,7 +123,9 @@ class WikipediaScraper:
         3. Find all paragraph tags: ps = content.find_all('p')
         4. Extract title from: raw_title = soup.find('title')
         5. Filter paragraphs to exclude those inside tables
-            Hint: access parent tags with .parents
+            - Hint: access parent tags with .parents
+            - Note: This check will work most of the time. But, there are other edge cases.
+              Try your scraper on "Daintree_Rainforest" and see what you get.
         6. Return tuple: (title, list_of_paragraph_texts)
     
         

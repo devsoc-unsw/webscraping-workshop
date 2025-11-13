@@ -102,6 +102,10 @@ class WikipediaScraper:
             for parent in tag.parents:
                 if parent.name == 'table':
                     return False
+                
+                # Additional edge case for geo coordinates
+                if tag.find(class_=('geo', 'geo-dec', 'coordinates')):
+                    return False
             return True
 
         content = []
