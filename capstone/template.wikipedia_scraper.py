@@ -21,24 +21,27 @@ from bs4 import BeautifulSoup, Tag
 
 
 class WikipediaScraper:
+    WIKI_BASE_URL = "https://en.wikipedia.org/wiki/"
+    WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
+    
+    # Wikipedia requests a User-Agent has contact info.
+    # Best practice would be to follow that, but this repo is public.
+    HEADERS = {
+        "User-Agent": "Wikipedia Workshop Scraper 1.0 (Educational Use)"
+    }
+    
+    # Config
+    PAGE_SIZE = 10
+    TEXT_WRAP_WIDTH = 100
+    FACT_LIMIT = 4
+    
+    # Commands
+    QUIT_COMMANDS = ['q', 'quit', 'exit']
+    CANCEL_COMMANDS = ['c', 'cancel']
+    MORE_COMMANDS = ['m', 'more']
+    
     def __init__(self):
-        self.WIKI_BASE_URL = "https://en.wikipedia.org/wiki/"
-        self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
-        
-        # Wikipedia requests a User-Agent has contact info.
-        # Best practice would be to follow that, but this repo is public.
-        self.HEADERS = {
-            "User-Agent": "Wikipedia Workshop Scraper 1.0 (Educational Use)"
-        }
-        # Config
-        self.PAGE_SIZE = 10
-        self.TEXT_WRAP_WIDTH = 100
-        self.FACT_LIMIT = 4
-        
-        # Commands
-        self.QUIT_COMMANDS = ['q', 'quit', 'exit']
-        self.CANCEL_COMMANDS = ['c', 'cancel']
-        self.MORE_COMMANDS = ['m', 'more']
+        pass
     
     
     # Print a formatted heading
@@ -306,11 +309,8 @@ class WikipediaScraper:
                 href = list[selected].get('href')
                 query = href.split('/')[-1]
                 self.go_to_page(query)
-            else:
-                self.prompt_new_search()
         else:
             print("\tNo results found")
-            self.prompt_new_search()
         
         
     # Handle Wikipedia disambiguation pages by extracting topic links
@@ -335,7 +335,6 @@ class WikipediaScraper:
             print(wrapped_first)
             facts = self.extract_key_facts(' '.join(body[:3]))  # First 3 paragraphs
             self.display_facts(facts)
-            self.prompt_new_search()
             
 
     # Display extracted facts in a nicely formatted way
@@ -367,15 +366,11 @@ class WikipediaScraper:
             print(f"Sorry! No page exists for '{query}'. Please try again!")
             return
 
-        try:
-            self.handle_content_page(response.text)
-        except:
-            # We shouldnt get here.
-            print(f"Error handling page: {response.url}")
+        self.handle_content_page(response.text)
 
     
     # Handle user search by querying Wikipedia API
-    def perform_search(self, query):
+    def handle_search(self, query):
         print(f"Searching Wikipedia for '{query}':")
         return self.get_search_results(query)
     
@@ -393,11 +388,14 @@ class WikipediaScraper:
         self.welcome_prompt()
         while True:
             try:
+                self.prompt_new_search()
                 line = self.handle_user_input()
                 query = self.form_query(line)
                 if not query: continue
-                results = self.perform_search(query)
-                if not results: continue
+                results = self.handle_search(query)
+                if not results:
+                    print(f"\tNo results found'")
+                    continue
                 selected = self.paginate(results)
                 if selected is None: continue
                 query = self.form_query(results[selected])
