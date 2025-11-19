@@ -5,12 +5,12 @@
 
 # BASIC FUNCTIONS (Complete these first):
 # 1. get_response() - Make HTTP requests to Wikipedia
-# 2. extract_page_paragraphs() - Extract article content using BeautifulSoup
+# 2. get_search_results() - Use Wikipedia API for search
+# 3. extract_page_paragraphs() - Extract article content using BeautifulSoup
 
 # ADVANCED FUNCTIONS (Complete after basic scraper works):
-# 3. is_disambiguation_page() - Detect disambiguation pages
-# 4. extract_disambiguation_links() - Extract links from disambiguation pages  
-# 5. extract_search_results_links() - Extract links from search result pages
+# 4. is_disambiguation_page() - Detect disambiguation pages
+# 5. extract_disambiguation_links() - Extract links from disambiguation pages  
 # 6. extract_key_facts() - Extract structured data using regex patterns
 
 import requests
@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup, Tag
 class WikipediaScraper:
     def __init__(self):
         self.WIKI_BASE_URL = "https://en.wikipedia.org/wiki/"
-        self.SEARCH_URL = "https://en.wikipedia.org/w/index.php/"
+        self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
         self.HEADERS = {
             "User-Agent": "Wikipedia Workshop Scraper 1.0 (Educational Use)"
         }
@@ -110,7 +110,32 @@ class WikipediaScraper:
         pass
     
     
-    # BASIC FUNCTION 2: Extract title and body content from Wikipedia article page
+    # BASIC FUNCTION 2: Use Wikipedia API to get search results
+    # TODO: Implement Wikipedia API search using opensearch
+    def get_search_results(self, query):
+        """
+        Get search results from Wikipedia using their API.
+        
+        TODO: Complete this function:
+        1. Set up API parameters for opensearch:
+           params = {
+               ... 
+           }
+        2. Call self.get_response() with self.WIKI_API_URL and params
+        
+        Args:
+            query (str): Search term to query Wikipedia
+            
+        Returns:
+            list: List of search result titles
+            
+        Test with: "Python" should return ["Python", "Python (programming language)", ...]
+        """
+        # YOUR CODE HERE
+        return []
+    
+    
+    # BASIC FUNCTION 3: Extract title and body content from Wikipedia article page
     # TODO: Use BeautifulSoup to parse HTML and extract article information
     def extract_page_paragraphs(self, page):
         """
@@ -127,7 +152,6 @@ class WikipediaScraper:
             - Note: This check will work most of the time. But, there are other edge cases.
               Try your scraper on "Daintree_Rainforest" and see what you get.
         6. Return tuple: (title, list_of_paragraph_texts)
-    
         
         Args:
             page (str): Raw HTML from Wikipedia page
@@ -143,7 +167,7 @@ class WikipediaScraper:
     # ADVANCED FUNCTIONS - Complete these after basic scraper works
     # ========================================================================
     
-    # ADVANCED FUNCTION 3: Check if current page is a disambiguation page
+    # ADVANCED FUNCTION 4: Check if current page is a disambiguation page
     # TODO: Detect disambiguation pages by looking at page categories
     def is_disambiguation_page(self, page_html):
         """
@@ -153,7 +177,6 @@ class WikipediaScraper:
         Hints:
             - Use beautiful soup
             - Look for the div with id 'catlinks'
-        
         
         Args:
             page_html (str): Raw HTML from Wikipedia page
@@ -165,7 +188,7 @@ class WikipediaScraper:
         pass
     
     
-    # ADVANCED FUNCTION 4: Extract links from disambiguation pages
+    # ADVANCED FUNCTION 5: Extract links from disambiguation pages
     # TODO: Get topic links for user to choose from
     def extract_disambiguation_links(self, page):
         """
@@ -183,30 +206,6 @@ class WikipediaScraper:
             
         Returns:
             list: List of anchor tag elements (<a> tags)
-        """
-        # YOUR CODE HERE
-        pass
-    
-    
-    # ADVANCED FUNCTION 5: Extract search result links from search results page
-    # TODO: Get search result links when no exact match is found
-    def extract_search_results_links(self, page_html):
-        """
-        Extract search result links from Wikipedia search page.
-        
-        TODO: Complete this function:
-        Hints:
-            - Look through the html of a wikipedia search result page.
-                - Chrome dev tools are good for this.
-                - Or curl -sL <link> > tempfile
-            - Try to find something specific to search result anchor tags that you
-              can leverage with bs4.
-        
-        Args:
-            page_html (str): Raw HTML from search results page
-            
-        Returns:
-            list: List of anchor tag elements, empty list if none found
         """
         # YOUR CODE HERE
         pass
@@ -250,8 +249,8 @@ class WikipediaScraper:
 
     # ========================================================================
     # COMPLETED FUNCTIONS - These are already implemented for you
-    #   It may be useful to read over some of them to see how your functions
-    #   interact.
+    #   It may be useful to read over some of them to see how the program
+    #   works.
     # ========================================================================
     
     # Display paginated list of options to user
@@ -299,7 +298,7 @@ class WikipediaScraper:
             if selected is not None:
                 href = list[selected].get('href')
                 query = href.split('/')[-1]
-                self.perform_search(query)
+                self.go_to_page(query)
             else:
                 self.prompt_new_search()
         else:
@@ -308,10 +307,12 @@ class WikipediaScraper:
         
         
     # Handle Wikipedia disambiguation pages by extracting topic links
-    def handle_disambiguation_page(self, page_html):
+    def handle_disambiguation_page(self, title, page_html):
+        print(f"This is a disambiguation page. '{title}' could mean:")
         topics = self.extract_disambiguation_links(page_html)
         self.handle_links_list(topics)
-        
+    
+    
     # Handle main Wikipedia content pages
     # Displays article title and first paragraph, or redirects to disambiguation        
     def handle_content_page(self, page_html):
@@ -320,7 +321,7 @@ class WikipediaScraper:
         self.print_heading("Overview")
         # If page is a disambiguation page then we recurse
         if self.is_disambiguation_page(page_html):
-            self.handle_disambiguation_page(page_html)
+            self.handle_disambiguation_page(title, page_html)
         # Otherwise, it is a normal page. So print overview paragraph and key facts
         else:
             wrapped_first = textwrap.fill(body[0], width=self.TEXT_WRAP_WIDTH)
@@ -328,16 +329,8 @@ class WikipediaScraper:
             facts = self.extract_key_facts(' '.join(body[:3]))  # First 3 paragraphs
             self.display_facts(facts)
             self.prompt_new_search()
-    
-    
-    # Handle Wikipedia search results page when no exact match is found
-    # Shows list of suggested articles for user to choose from
-    def handle_search_result_page(self, query, page_html):
-        print(f"No page for '{query}'. Found these search results!")
-        results = self.extract_search_results_links(page_html)
-        self.handle_links_list(results)
             
-    
+
     # Display extracted facts in a nicely formatted way
     def display_facts(self, facts):
         found = False
@@ -355,47 +348,47 @@ class WikipediaScraper:
                     
         if not found:
             print("No facts found. Try a different article!")
+
     
-    
-    # Main search method that coordinates the entire search process
-    # Handles both direct page matches and search result pages
-    def perform_search(self, query):
+    def go_to_page(self, query):
         print(f"Searching Wikipedia for '{query}'")
-        
-        # First try searching for the query.
-        # Wikipedia will redirect of it finds a page with an exact match.
-        params = {
-            'search': query
-        }
-        response = self.get_response(self.SEARCH_URL, params=params)
+        response = self.get_response(self.WIKI_BASE_URL + query)
         
         # Check nothing went wrong
         if not response:
             print(f"Sorry! No page exists for '{query}'. Please try again!")
             return
 
-        # If no redirect was made, expand on the search results.
-        if '?search=' in response.url:
-            self.handle_search_result_page(query, response.text)
-        # Otherwise go to the found page
-        elif '/wiki/' in response.url:
+        try:
             self.handle_content_page(response.text)
-        # We shouldnt get here.
-        else:
-            print(f"Unsupported Page Type: {response.url}")
+        except:
+            # We shouldnt get here.
+            print(f"Error handling page: {response.url}")
     
+    def perform_search(self, query):
+        print(f"Searching Wikipedia for '{query}':")
+        return self.get_search_results(query)
+    
+    def welcome_prompt(self):
+        print("Welcome to Wikipedia Scraper!")
+        print("Type 'q' at any time to quit")
+        print("\nWhat would you like to learn about?")
     
     # Main program loop that handles user interaction
     # Continuously prompts for search terms and processes them
     def run(self):
-        print("Welcome to Wikipedia Scraper!")
-        print("Type 'q' at any time to quit")
-        print("\nWhat would you like to learn about?")
+        self.welcome_prompt()
         while True:
             try:
                 line = self.handle_user_input()
                 query = self.form_query(line)
-                self.perform_search(query)
+                if not query: continue
+                results = self.perform_search(query)
+                if not results: continue
+                selected = self.paginate(results)
+                if selected is None: continue
+                query = self.form_query(results[selected])
+                self.go_to_page(query)
                     
             except (EOFError, KeyboardInterrupt):
                 self.stop()

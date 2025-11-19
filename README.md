@@ -67,9 +67,10 @@ By the end of this workshop, you will be able to:
 Build a complete Wikipedia article scraper that demonstrates all learned concepts.
 
 #### Features:
-- **Search Wikipedia articles** by topic
+- **Search Wikipedia articles** by topic using their official API
+- **Scrape article content** from Wikipedia pages
+- **Parse content** using BeautifulSoup
 - **Handle disambiguation pages** with user selection
-- **Process search results** when no exact match exists
 - **Extract key facts** using regex patterns (dates, money, measurements, quotes, locations)
 - **Interactive interface** with pagination and user commands
 - **Robust error handling** for network issues and edge cases
@@ -83,16 +84,14 @@ Build a complete Wikipedia article scraper that demonstrates all learned concept
 The template provides a structured approach to building the scraper:
 
 **Basic Functions (Complete First):**
-
-1. `get_response()` - HTTP requests and error handling
-2. `extract_page_paragraphs()` - HTML parsing with BeautifulSoup
+1. `get_response()` - Make HTTP requests to Wikipedia
+2. `get_search_results()` - Use Wikipedia API for search
+3. `extract_page_paragraphs()` - Extract article content using BeautifulSoup
 
 **Advanced Functions (Complete After Basic Works):**
-
-3. `is_disambiguation_page()` - Detect special page types
-4. `extract()_disambiguation_links()` - Extract topic links
-5. `extract_search_results_links()` - Handle search results
-6. `extract_key_facts()` - Regex-based data extraction
+4. `is_disambiguation_page()` - Detect disambiguation pages
+5. `extract_disambiguation_links()` - Extract topic links
+6. `extract_key_facts()` - Extract structured data using regex patterns
 
 ## Getting Started
 
@@ -119,16 +118,16 @@ The template provides a structured approach to building the scraper:
    ./solutions/capstone/wikipedia_scraper.py
    ```
 
-## Testing Your Implementation
+## 🧪 Testing Your Implementation
 
 ### Basic Functions Test:
-- Try searching: `Python (programming language)`
-- Should display article title and first paragraph
+- **After completing `get_response()`**: Try searching any term - should handle HTTP requests properly
+- **After completing `get_search_results()`**: Try searching "Python" - should show search results from Wikipedia API
+- **After completing `extract_page_paragraphs()`**: Try searching "Python (programming language)" - should display article title and first paragraph
 
 ### Advanced Functions Test:
-- Try searching: `Python` (disambiguation page)
-- Try searching: `asdfghijk` (search results page)
-- Any article should show extracted facts
+- Try searching: `Python` (disambiguation page with multiple options)
+- Any article should show extracted facts (dates, money, measurements, quotes, locations)
 
 ## Dependencies
 
@@ -149,3 +148,4 @@ The template provides a structured approach to building the scraper:
 - [Requests Documentation](https://requests.readthedocs.io/)
 - [BeautifulSoup Documentation](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
 - [Regular Expressions Guide](https://docs.python.org/3/library/re.html)
+- [Wikipedia API Documentation](https://www.mediawiki.org/wiki/API:Main_page)

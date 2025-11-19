@@ -15,7 +15,10 @@ from bs4 import BeautifulSoup, Tag
 class WikipediaScraper:
     def __init__(self):
         self.WIKI_BASE_URL = "https://en.wikipedia.org/wiki/"
-        self.SEARCH_URL = "https://en.wikipedia.org/w/index.php/"
+        # Previous implementation searched via /w/index.php?search=...
+        # This violated condition in Wikipedia's robots.txt disallowing scraping /w/.
+        # Now using official Wikipedia API for search functionality.
+        self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
         self.HEADERS = {
             "User-Agent": "Wikipedia Workshop Scraper 1.0 (Educational Use)"
         }
@@ -170,7 +173,7 @@ class WikipediaScraper:
             if selected is not None:
                 href = list[selected].get('href')
                 query = href.split('/')[-1]
-                self.perform_search(query)
+                self.go_to_page(query)
             else:
                 self.prompt_new_search()
         else:
@@ -179,7 +182,8 @@ class WikipediaScraper:
         
         
     # Handle Wikipedia disambiguation pages by extracting topic links
-    def handle_disambiguation_page(self, page_html):
+    def handle_disambiguation_page(self, title, page_html):
+        print(f"This is a disambiguation page. '{title}' could mean:")
         topics = self.extract_disambiguation_links(page_html)
         self.handle_links_list(topics)
     
@@ -204,7 +208,7 @@ class WikipediaScraper:
         self.print_heading("Overview")
         # If page is a disambiguation page then we recurse
         if self.is_disambiguation_page(page_html):
-            self.handle_disambiguation_page(page_html)
+            self.handle_disambiguation_page(title, page_html)
         # Otherwise, it is a normal page. So print overview paragraph and key facts
         else:
             wrapped_first = textwrap.fill(body[0], width=self.TEXT_WRAP_WIDTH)
@@ -212,26 +216,6 @@ class WikipediaScraper:
             facts = self.extract_key_facts(' '.join(body[:3]))  # First 3 paragraphs
             self.display_facts(facts)
             self.prompt_new_search()
-            
-    # Extract search result links from Wikipedia search results page
-    # Returns list of anchor tags from search result items
-    def extract_search_results_links(self, page_html):
-        try:
-            soup = BeautifulSoup(page_html, 'html.parser')
-            content = soup.find('ul', class_='mw-search-results')
-            links = content.select('li', class_="mw-search-result")
-            links = [l.find('a') for l in links]
-            return links
-        except AttributeError:
-            return []
-    
-    
-    # Handle Wikipedia search results page when no exact match is found
-    # Shows list of suggested articles for user to choose from
-    def handle_search_result_page(self, query, page_html):
-        print(f"No page for '{query}'. Found these search results!")
-        results = self.extract_search_results_links(page_html)
-        self.handle_links_list(results)
             
 
     # Extract interesting facts from Wikipedia article text using regex patterns
@@ -346,46 +330,60 @@ class WikipediaScraper:
         if not found:
             print("No facts found. Try a different article!")
     
-    
-    # Main search method that coordinates the entire search process
-    # Handles both direct page matches and search result pages
-    def perform_search(self, query):
-        print(f"Searching Wikipedia for '{query}'")
-        
-        # First try searching for the query.
-        # Wikipedia will redirect of it finds a page with an exact match.
+    # Uses wikipedia api and Opensearch to return a list of search results.      
+    # https://www.mediawiki.org/wiki/API:Opensearch
+    def get_search_results(self, query):
         params = {
-            'search': query
+            "action": "opensearch",
+            "namespace": "0",
+            "search": query,
+            "limit": "10",
+            "format": "json"
         }
-        response = self.get_response(self.SEARCH_URL, params=params)
+        
+        search_response = self.get_response(self.WIKI_API_URL, params=params)
+        return search_response.json()[1]
+    
+    # Scrape a wikipedia article for a given query.
+    def go_to_page(self, query):
+        print(f"Searching Wikipedia for '{query}'")
+        response = self.get_response(self.WIKI_BASE_URL + query)
         
         # Check nothing went wrong
         if not response:
             print(f"Sorry! No page exists for '{query}'. Please try again!")
             return
 
-        # If no redirect was made, expand on the search results.
-        if '?search=' in response.url:
-            self.handle_search_result_page(query, response.text)
-        # Otherwise go to the found page
-        elif '/wiki/' in response.url:
+        try:
             self.handle_content_page(response.text)
-        # We shouldnt get here.
-        else:
-            print(f"Unsupported Page Type: {response.url}")
+        except:
+            # We shouldnt get here.
+            print(f"Error handling page: {response.url}")
     
+    def perform_search(self, query):
+        print(f"Searching Wikipedia for '{query}':")
+        return self.get_search_results(query)
+    
+    def welcome_prompt(self):
+        print("Welcome to Wikipedia Scraper!")
+        print("Type 'q' at any time to quit")
+        print("\nWhat would you like to learn about?")
     
     # Main program loop that handles user interaction
     # Continuously prompts for search terms and processes them
     def run(self):
-        print("Welcome to Wikipedia Scraper!")
-        print("Type 'q' at any time to quit")
-        print("\nWhat would you like to learn about?")
+        self.welcome_prompt()
         while True:
             try:
                 line = self.handle_user_input()
                 query = self.form_query(line)
-                self.perform_search(query)
+                if not query: continue
+                results = self.perform_search(query)
+                if not results: continue
+                selected = self.paginate(results)
+                if selected is None: continue
+                query = self.form_query(results[selected])
+                self.go_to_page(query)
                     
             except (EOFError, KeyboardInterrupt):
                 self.stop()
