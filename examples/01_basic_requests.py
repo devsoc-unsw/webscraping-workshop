@@ -5,10 +5,6 @@
 # By Chris Casolin, November 2025
 # Written for Devsoc Training Program's Intro to Web Scraping Workshop
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import requests
 import re
 import html

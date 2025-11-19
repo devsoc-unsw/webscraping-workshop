@@ -5,10 +5,6 @@
 # By Chris Casolin, November 2025
 # Written for Devsoc Training Program's Intro to Web Scraping Workshop
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import re
 from helper import print_ex
 
@@ -186,7 +182,7 @@ def ex3_4():
 ################################################################################
 # Run all examples
 if __name__ == "__main__":
-    # ex3_1()
-    # ex3_2()
+    ex3_1()
+    ex3_2()
     ex3_3()
-    # ex3_4()
+    ex3_4()

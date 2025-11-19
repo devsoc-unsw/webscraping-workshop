@@ -5,10 +5,6 @@
 # By Chris Casolin, November 2025
 # Written for Devsoc Training Program's Intro to Web Scraping Workshop
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import requests
 from bs4 import BeautifulSoup, Tag
 import html
@@ -16,7 +12,7 @@ from helper import print_ex
 
 ################################################################################
 def ex2_1():
-    print_ex(1.6, 'Parse Quotes with BeautifulSoup')
+    print_ex(2.1, 'Parse Quotes with BeautifulSoup')
     
     response = requests.get("http://quotes.toscrape.com/")
     html_content = response.text
@@ -37,7 +33,7 @@ def ex2_1():
 
 ################################################################################
 def ex2_2():
-    print_ex(1.6, 'Parse Wikipedia HTML with BeautifulSoup')
+    print_ex(2.2, 'Parse Wikipedia HTML with BeautifulSoup')
     print("Print the first Paragraph of a Wikipedia Article Using BeautifulSoup")
     
     headers = {'User-Agent': "Web Scraping Demo 1.0"}
