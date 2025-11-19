@@ -12,6 +12,7 @@ import sys
 import textwrap
 from bs4 import BeautifulSoup, Tag
 
+
 class WikipediaScraper:
     def __init__(self):
         self.WIKI_BASE_URL = "https://en.wikipedia.org/wiki/"
@@ -19,9 +20,13 @@ class WikipediaScraper:
         # This violated condition in Wikipedia's robots.txt disallowing scraping /w/.
         # Now using official Wikipedia API for search functionality.
         self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
+        
+        # Wikipedia requests a User-Agent has contact info.
+        # Best practice would be to follow that, but this repo is public.
         self.HEADERS = {
             "User-Agent": "Wikipedia Workshop Scraper 1.0 (Educational Use)"
         }
+        
         # Config
         self.PAGE_SIZE = 10
         self.TEXT_WRAP_WIDTH = 100
@@ -32,10 +37,13 @@ class WikipediaScraper:
         self.CANCEL_COMMANDS = ['c', 'cancel']
         self.MORE_COMMANDS = ['m', 'more']
     
+    
+    # Print a formatted heading
     def print_heading(self, str):
         print("-"*self.TEXT_WRAP_WIDTH)
         print(" " * int((self.TEXT_WRAP_WIDTH - len(str)) / 2) + str)
         print("-"*self.TEXT_WRAP_WIDTH)
+
 
     # Display prompt asking user for a new search term
     def prompt_new_search(self):
@@ -330,6 +338,7 @@ class WikipediaScraper:
         if not found:
             print("No facts found. Try a different article!")
     
+    
     # Uses wikipedia api and Opensearch to return a list of search results.      
     # https://www.mediawiki.org/wiki/API:Opensearch
     def get_search_results(self, query):
@@ -344,7 +353,8 @@ class WikipediaScraper:
         search_response = self.get_response(self.WIKI_API_URL, params=params)
         return search_response.json()[1]
     
-    # Scrape a wikipedia article for a given query.
+    
+    # Handle navigating to a specific Wikipedia page by query
     def go_to_page(self, query):
         print(f"Searching Wikipedia for '{query}'")
         response = self.get_response(self.WIKI_BASE_URL + query)
@@ -360,14 +370,19 @@ class WikipediaScraper:
             # We shouldnt get here.
             print(f"Error handling page: {response.url}")
     
+    
+    # Handle user search by querying Wikipedia API
     def perform_search(self, query):
         print(f"Searching Wikipedia for '{query}':")
         return self.get_search_results(query)
     
+    
+    # Print welcome prompt at start of program
     def welcome_prompt(self):
         print("Welcome to Wikipedia Scraper!")
         print("Type 'q' at any time to quit")
         print("\nWhat would you like to learn about?")
+    
     
     # Main program loop that handles user interaction
     # Continuously prompts for search terms and processes them
