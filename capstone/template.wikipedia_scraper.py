@@ -106,7 +106,8 @@ class WikipediaScraper:
         3. If successful, return the response object
         4. If failed, print the response status and return None
         5. Handle any exceptions (network errors, timeouts) by printing the error and returning None
-        
+            Hint:
+                - instead of checking the status code, you can use also response.raise_for_status()
         Args:
             url (str): The URL to request
             params (dict): Optional URL parameters (like search terms)
